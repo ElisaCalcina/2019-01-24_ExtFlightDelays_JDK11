@@ -10,6 +10,7 @@ import java.util.List;
 
 import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
+import it.polito.tdp.extflightdelays.model.Collegamento;
 import it.polito.tdp.extflightdelays.model.Flight;
 
 public class ExtFlightDelaysDAO {
@@ -115,4 +116,60 @@ public class ExtFlightDelaysDAO {
 			throw new RuntimeException("Error Connection Database");
 		}
 	}
+	
+	//vertici
+	public List<String> getVertici(){
+		String sql="SELECT distinct state as s " + 
+				"FROM airports "+
+				"ORDER BY s asc ";
+		
+		List<String> result= new ArrayList<>();
+
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				result.add(rs.getString("s"));
+			}
+			conn.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+	}
+	//String s1, String s2
+	public List<Collegamento> getArchi() {
+		String sql="SELECT a1.STATE AS s1,a2.STATE AS s2,COUNT(DISTINCT (f.TAIL_NUMBER)) AS peso " + 
+				"FROM airports AS a1,airports AS a2, flights AS f " + 
+				"WHERE f.ORIGIN_AIRPORT_ID=a1.ID " + 
+				"AND f.DESTINATION_AIRPORT_ID=a2.ID " + 
+				"GROUP BY a1.STATE,a2.STATE " + 
+				"HAVING peso!=0  ";
+		
+		List<Collegamento> collegamenti = new LinkedList<Collegamento>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			
+			ResultSet rs = st.executeQuery();
+
+			while(rs.next()) {
+				Collegamento c= new Collegamento(rs.getString("s1"), rs.getString("s2"),rs.getDouble("peso"));
+				collegamenti.add(c);
+			}
+			conn.close();
+			return collegamenti;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+	}
+		
 }
